@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lucky Draw - ระบบสุ่มผู้โชคดี</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Kanit', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+        .winner-animation {
+            animation: celebrate 0.5s ease-out;
+        }
+        @keyframes celebrate {
+            0% { transform: scale(0.5); opacity: 0; }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .names-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        .names-list::-webkit-scrollbar-thumb {
+            background-color: #cbd5e0;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-6xl mx-auto">
+        <header class="text-center mb-10">
+            <h1 class="text-4xl md:text-5xl font-bold text-white drop-shadow-lg mb-2">Lucky Draw</h1>
+            <p class="text-purple-100 text-lg">ระบบสุ่มรายชื่อผู้โชคดี</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left Side: Control & Add Name -->
+            <div class="lg:col-span-1 space-y-6">
+                <div class="glass-card p-6">
+                    <h2 class="text-xl font-semibold mb-4 text-purple-800 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-0h6m-6 0H6"></path></svg>
+                        เพิ่มรายชื่อใหม่
+                    </h2>
+                    <div class="flex gap-2">
+                        <input type="text" id="newNameInput" placeholder="ใส่ชื่อที่นี่..." 
+                            class="flex-1 border-2 border-purple-100 rounded-lg px-4 py-2 focus:outline-none focus:border-purple-500 transition-colors">
+                        <button onclick="addName()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-all shadow-md active:scale-95">
+                            เพิ่ม
+                        </button>
+                    </div>
+                </div>
+
+                <div class="glass-card p-6">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-800 flex justify-between items-center">
+                        <span>รายชื่อที่เหลือ (<span id="countRemaining">0</span>)</span>
+                    </h2>
+                    <div id="remainingList" class="names-list h-64 overflow-y-auto space-y-2 pr-2">
+                        <!-- Remaining names will appear here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Center: Draw Display -->
+            <div class="lg:col-span-1 flex flex-col items-center justify-start space-y-6">
+                <div class="glass-card w-full p-8 text-center min-h-[300px] flex flex-col justify-center items-center relative overflow-hidden">
+                    <div id="drawingOverlay" class="hidden absolute inset-0 bg-white bg-opacity-90 z-10 flex flex-center items-center justify-center">
+                        <div class="text-2xl font-bold text-purple-600 animate-pulse" id="shufflingName">กำลังสุ่ม...</div>
+                    </div>
+                    
+                    <div id="winnerDisplay">
+                        <div class="text-gray-400 mb-2">ผลการสุ่ม</div>
+                        <div id="winnerText" class="text-3xl font-bold text-purple-600 py-4 px-2">กดปุ่มเพื่อเริ่มสุ่ม</div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col w-full gap-4">
+                    <button id="drawBtn" onclick="drawLuckyWinner()" 
+                        class="w-full py-5 bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white text-2xl font-bold rounded-2xl shadow-xl transition-all transform hover:-translate-y-1 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed">
+                        เริ่มสุ่มชื่อ!
+                    </button>
+                    <button onclick="resetGame()" 
+                        class="w-full py-3 border-2 border-white text-white font-semibold rounded-xl hover:bg-white hover:text-purple-600 transition-all">
+                        เริ่มใหม่ทั้งหมด (Reset)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Side: Winners History -->
+            <div class="lg:col-span-1">
+                <div class="glass-card p-6 h-full min-h-[500px]">
+                    <h2 class="text-xl font-semibold mb-4 text-green-600 flex items-center">
+                        <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        ผู้โชคดีที่ได้รับรางวัล
+                    </h2>
+                    <div id="winnersList" class="names-list h-[450px] overflow-y-auto space-y-3">
+                        <!-- Winners will appear here -->
+                    </div>
+                    <div id="emptyWinners" class="text-center text-gray-400 mt-10">ยังไม่มีผู้โชคดี</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Message Box Overlay -->
+    <div id="modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl p-8 max-w-md w-full text-center shadow-2xl">
+            <h3 class="text-2xl font-bold text-gray-800 mb-4">ยินดีด้วย!</h3>
+            <div id="modalWinnerName" class="text-3xl font-bold text-purple-600 mb-6"></div>
+            <button onclick="closeModal()" class="w-full bg-purple-600 text-white py-3 rounded-lg font-bold hover:bg-purple-700 transition-colors">
+                ตกลง
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const INITIAL_NAMES = [
+            "คุณเฉลิมชัย รัตนโสภาจิรสิน", "คุณธนินท์ธร แพ่งสุภา", "คุณธนศักดิ์ รอดฉ่ำ", 
+            "คุณธเนศ ศรีสุข", "คุณโชติธนินท์ ไชยอัมราวงศ์", "คุณสุกัณยา เดชารัตน์", 
+            "คุณวุฒิกิจ ภักดีไทย", "คุณสุรศักดิ์ แก้วบริสุทธิ์", "คุณคมสันต์ ร่มลำดวน", 
+            "คุณจารึก ไพบูลย์เกษมสุทธิ", "คุณชิษณุพงศ์ แสงแก้ว", "คุณครอง สิงห์สุริยะ", 
+            "คุณพัสกร ชยุตาพงศ์", "คุณสิทธิพร ชุมแสง", "คุณธนาวุฒิ พามา", 
+            "คุณกมล สถานานนท์", "คุณสิทธิกร คำสุข", "คุณถนัดกิจ ชะนา", 
+            "คุณภาคี หงอสกุล", "คุณจัตุโชค วรนาม", "คุณกฤตชัย เภรีพล", 
+            "คุณธวัชชัย ปาสารักษ์"
+        ];
+
+        let remainingNames = [...INITIAL_NAMES];
+        let winners = [];
+        let isSpinning = false;
+
+        function updateUI() {
+            const remainingListDiv = document.getElementById('remainingList');
+            const winnersListDiv = document.getElementById('winnersList');
+            const countRemaining = document.getElementById('countRemaining');
+            const emptyWinners = document.getElementById('emptyWinners');
+            const drawBtn = document.getElementById('drawBtn');
+
+            // Update Remaining List
+            remainingListDiv.innerHTML = '';
+            remainingNames.forEach((name, index) => {
+                const div = document.createElement('div');
+                div.className = 'flex justify-between items-center p-2 bg-purple-50 rounded-lg text-sm group hover:bg-purple-100 transition-colors';
+                div.innerHTML = `
+                    <span class="text-purple-900">${name}</span>
+                    <button onclick="removeSpecificName(${index})" class="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                `;
+                remainingListDiv.appendChild(div);
+            });
+
+            // Update Winners List
+            winnersListDiv.innerHTML = '';
+            winners.forEach((winner, index) => {
+                const div = document.createElement('div');
+                div.className = 'winner-animation flex items-center p-3 bg-green-50 border-l-4 border-green-500 rounded-r-lg shadow-sm';
+                div.innerHTML = `
+                    <span class="font-bold text-green-700 mr-3">#${winners.length - index}</span>
+                    <span class="text-gray-800">${winner}</span>
+                `;
+                winnersListDiv.insertBefore(div, winnersListDiv.firstChild);
+            });
+
+            countRemaining.innerText = remainingNames.length;
+            emptyWinners.classList.toggle('hidden', winners.length > 0);
+            
+            // Disable button if no names left
+            drawBtn.disabled = remainingNames.length === 0;
+            if (remainingNames.length === 0) {
+                drawBtn.innerText = "รายชื่อหมดแล้ว";
+            } else {
+                drawBtn.innerText = "เริ่มสุ่มชื่อ!";
+            }
+        }
+
+        function addName() {
+            const input = document.getElementById('newNameInput');
+            const name = input.value.trim();
+            if (name) {
+                remainingNames.push(name);
+                input.value = '';
+                updateUI();
+            }
+        }
+
+        function removeSpecificName(index) {
+            remainingNames.splice(index, 1);
+            updateUI();
+        }
+
+        function drawLuckyWinner() {
+            if (isSpinning || remainingNames.length === 0) return;
+
+            isSpinning = true;
+            const drawBtn = document.getElementById('drawBtn');
+            const drawingOverlay = document.getElementById('drawingOverlay');
+            const shufflingName = document.getElementById('shufflingName');
+            const winnerText = document.getElementById('winnerText');
+
+            drawBtn.disabled = true;
+            drawingOverlay.classList.remove('hidden');
+            winnerText.innerText = "กำลังประมวลผล...";
+
+            let count = 0;
+            const shuffleInterval = setInterval(() => {
+                const randomName = remainingNames[Math.floor(Math.random() * remainingNames.length)];
+                shufflingName.innerText = randomName;
+                count++;
+                
+                if (count > 20) {
+                    clearInterval(shuffleInterval);
+                    finalizeWinner();
+                }
+            }, 100);
+        }
+
+        function finalizeWinner() {
+            const randomIndex = Math.floor(Math.random() * remainingNames.length);
+            const winner = remainingNames[randomIndex];
+            
+            // Remove from pool and add to winners
+            remainingNames.splice(randomIndex, 1);
+            winners.push(winner);
+
+            // Update UI with result
+            const drawingOverlay = document.getElementById('drawingOverlay');
+            const winnerText = document.getElementById('winnerText');
+            const modal = document.getElementById('modal');
+            const modalWinnerName = document.getElementById('modalWinnerName');
+
+            drawingOverlay.classList.add('hidden');
+            winnerText.innerText = winner;
+            modalWinnerName.innerText = winner;
+            
+            setTimeout(() => {
+                modal.classList.remove('hidden');
+                updateUI();
+                isSpinning = false;
+            }, 500);
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.add('hidden');
+            document.getElementById('drawBtn').disabled = remainingNames.length === 0;
+        }
+
+        function resetGame() {
+            if (confirm('คุณต้องการเริ่มใหม่ทั้งหมดใช่หรือไม่? รายชื่อเดิมจะถูกคืนค่ากลับมา')) {
+                remainingNames = [...INITIAL_NAMES];
+                winners = [];
+                document.getElementById('winnerText').innerText = "กดปุ่มเพื่อเริ่มสุ่ม";
+                updateUI();
+            }
+        }
+
+        // Initialize UI
+        updateUI();
+
+        // Add "Enter" key support for adding names
+        document.getElementById('newNameInput').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                addName();
+            }
+        });
+    </script>
+</body>
+</html>
