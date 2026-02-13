@@ -3,121 +3,159 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lucky Draw - ระบบสุ่มผู้โชคดี</title>
+    <title>Carrier Lucky Draw - วงล้อส่งความโชคดี</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Kanit', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-color: #f3f4f6;
+            background-image: radial-gradient(#1e3a8a 0.5px, transparent 0.5px), radial-gradient(#1e3a8a 0.5px, #f3f4f6 0.5px);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
             min-height: 100vh;
         }
-        .glass-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-        }
-        .winner-animation {
-            animation: celebrate 0.5s ease-out;
-        }
-        @keyframes celebrate {
-            0% { transform: scale(0.5); opacity: 0; }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); opacity: 1; }
+        .carrier-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            border-top: 6px solid #f97316;
         }
         .names-list::-webkit-scrollbar {
-            width: 6px;
+            width: 5px;
         }
         .names-list::-webkit-scrollbar-thumb {
             background-color: #cbd5e0;
             border-radius: 10px;
         }
+        #wheel-container {
+            position: relative;
+            width: 100%;
+            max-width: 450px;
+            margin: 0 auto;
+        }
+        #pointer {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 20;
+            filter: drop-shadow(0 4px 4px rgba(0,0,0,0.2));
+        }
+        canvas {
+            width: 100%;
+            height: auto;
+            border-radius: 50%;
+            box-shadow: 0 0 30px rgba(0,0,0,0.15);
+        }
     </style>
 </head>
 <body class="p-4 md:p-8">
-    <div class="max-w-6xl mx-auto">
-        <header class="text-center mb-10">
-            <h1 class="text-4xl md:text-5xl font-bold text-white drop-shadow-lg mb-2">Lucky Draw</h1>
-            <p class="text-purple-100 text-lg">ระบบสุ่มรายชื่อผู้โชคดี</p>
+    <div class="max-w-7xl mx-auto">
+        <!-- Header Section -->
+        <header class="flex flex-col md:flex-row items-center justify-between mb-8 bg-blue-900 p-6 rounded-2xl shadow-2xl text-white">
+            <div class="flex items-center space-x-4 mb-4 md:mb-0">
+                <div class="bg-orange-500 p-3 rounded-xl">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"></path></svg>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-bold uppercase tracking-wider">Carrier Lucky Wheel</h1>
+                    <p class="text-blue-200 text-sm">จัดส่งความโชคดี ถึงมือคุณทันใจ</p>
+                </div>
+            </div>
+            <div class="flex space-x-2">
+                <button onclick="resetGame()" class="px-4 py-2 bg-blue-800 hover:bg-blue-700 border border-blue-600 rounded-lg transition-colors flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    เริ่มใหม่
+                </button>
+            </div>
         </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- Left Side: Control & Add Name -->
-            <div class="lg:col-span-1 space-y-6">
-                <div class="glass-card p-6">
-                    <h2 class="text-xl font-semibold mb-4 text-purple-800 flex items-center">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-0h6m-6 0H6"></path></svg>
-                        เพิ่มรายชื่อใหม่
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- Left: Sidebar Manage Names -->
+            <div class="lg:col-span-3 space-y-6">
+                <div class="carrier-card p-5">
+                    <h2 class="text-lg font-bold text-gray-800 mb-3 flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-orange-500" fill="currentColor" viewBox="0 0 20 20"><path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z"></path></svg>
+                        เพิ่มชื่อพนักงาน
                     </h2>
-                    <div class="flex gap-2">
-                        <input type="text" id="newNameInput" placeholder="ใส่ชื่อที่นี่..." 
-                            class="flex-1 border-2 border-purple-100 rounded-lg px-4 py-2 focus:outline-none focus:border-purple-500 transition-colors">
-                        <button onclick="addName()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-all shadow-md active:scale-95">
-                            เพิ่ม
+                    <div class="flex flex-col gap-2">
+                        <input type="text" id="newNameInput" placeholder="พิมพ์ชื่อที่นี่..." 
+                            class="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500 outline-none">
+                        <button onclick="addName()" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 rounded-lg transition-transform active:scale-95 shadow-md">
+                            ยืนยันรายการ
                         </button>
                     </div>
                 </div>
 
-                <div class="glass-card p-6">
-                    <h2 class="text-xl font-semibold mb-4 text-gray-800 flex justify-between items-center">
-                        <span>รายชื่อที่เหลือ (<span id="countRemaining">0</span>)</span>
-                    </h2>
-                    <div id="remainingList" class="names-list h-64 overflow-y-auto space-y-2 pr-2">
-                        <!-- Remaining names will appear here -->
+                <div class="carrier-card p-5">
+                    <div class="flex justify-between items-center mb-3">
+                        <h2 class="font-bold text-gray-800">ในระบบขนส่ง (<span id="countRemaining">0</span>)</h2>
+                    </div>
+                    <div id="remainingList" class="names-list h-64 overflow-y-auto space-y-1">
+                        <!-- Names list -->
                     </div>
                 </div>
             </div>
 
-            <!-- Center: Draw Display -->
-            <div class="lg:col-span-1 flex flex-col items-center justify-start space-y-6">
-                <div class="glass-card w-full p-8 text-center min-h-[300px] flex flex-col justify-center items-center relative overflow-hidden">
-                    <div id="drawingOverlay" class="hidden absolute inset-0 bg-white bg-opacity-90 z-10 flex flex-center items-center justify-center">
-                        <div class="text-2xl font-bold text-purple-600 animate-pulse" id="shufflingName">กำลังสุ่ม...</div>
+            <!-- Center: The Lucky Wheel -->
+            <div class="lg:col-span-6 flex flex-col items-center">
+                <div id="wheel-container" class="mb-8">
+                    <!-- Triangle Pointer SVG -->
+                    <div id="pointer">
+                        <svg width="40" height="40" viewBox="0 0 40 40">
+                            <path d="M20 40 L0 0 L40 0 Z" fill="#f97316" />
+                        </svg>
                     </div>
-                    
-                    <div id="winnerDisplay">
-                        <div class="text-gray-400 mb-2">ผลการสุ่ม</div>
-                        <div id="winnerText" class="text-3xl font-bold text-purple-600 py-4 px-2">กดปุ่มเพื่อเริ่มสุ่ม</div>
-                    </div>
+                    <canvas id="wheelCanvas" width="800" height="800"></canvas>
                 </div>
-
-                <div class="flex flex-col w-full gap-4">
-                    <button id="drawBtn" onclick="drawLuckyWinner()" 
-                        class="w-full py-5 bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white text-2xl font-bold rounded-2xl shadow-xl transition-all transform hover:-translate-y-1 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed">
-                        เริ่มสุ่มชื่อ!
-                    </button>
-                    <button onclick="resetGame()" 
-                        class="w-full py-3 border-2 border-white text-white font-semibold rounded-xl hover:bg-white hover:text-purple-600 transition-all">
-                        เริ่มใหม่ทั้งหมด (Reset)
-                    </button>
-                </div>
+                
+                <button id="drawBtn" onclick="spinWheel()" 
+                    class="group relative px-12 py-5 bg-orange-500 text-white text-3xl font-black rounded-full shadow-[0_10px_0_rgb(194,65,12)] hover:shadow-[0_5px_0_rgb(194,65,12)] hover:translate-y-[5px] active:translate-y-[8px] active:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                    <span class="flex items-center">
+                        หมุนวงล้อ
+                        <svg class="ml-3 w-8 h-8 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                    </span>
+                </button>
             </div>
 
-            <!-- Right Side: Winners History -->
-            <div class="lg:col-span-1">
-                <div class="glass-card p-6 h-full min-h-[500px]">
-                    <h2 class="text-xl font-semibold mb-4 text-green-600 flex items-center">
-                        <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                        ผู้โชคดีที่ได้รับรางวัล
+            <!-- Right: Winners History -->
+            <div class="lg:col-span-3">
+                <div class="carrier-card p-5 h-full flex flex-col">
+                    <h2 class="text-lg font-bold text-green-600 mb-4 flex items-center">
+                        <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        ผู้โชคดี (รับสินค้าแล้ว)
                     </h2>
-                    <div id="winnersList" class="names-list h-[450px] overflow-y-auto space-y-3">
-                        <!-- Winners will appear here -->
+                    <div id="winnersList" class="names-list flex-1 overflow-y-auto space-y-3">
+                        <!-- Winners -->
                     </div>
-                    <div id="emptyWinners" class="text-center text-gray-400 mt-10">ยังไม่มีผู้โชคดี</div>
+                    <div id="emptyWinners" class="text-center py-10 text-gray-400">
+                        ยังไม่มีการส่งมอบ
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Message Box Overlay -->
-    <div id="modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl p-8 max-w-md w-full text-center shadow-2xl">
-            <h3 class="text-2xl font-bold text-gray-800 mb-4">ยินดีด้วย!</h3>
-            <div id="modalWinnerName" class="text-3xl font-bold text-purple-600 mb-6"></div>
-            <button onclick="closeModal()" class="w-full bg-purple-600 text-white py-3 rounded-lg font-bold hover:bg-purple-700 transition-colors">
-                ตกลง
-            </button>
+    <!-- Celebration Modal -->
+    <div id="modal" class="hidden fixed inset-0 bg-blue-900 bg-opacity-80 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl border-b-8 border-orange-500 relative overflow-hidden">
+            <!-- Box Graphics -->
+            <div class="absolute -top-10 -right-10 opacity-10">
+                <svg width="150" height="150" viewBox="0 0 24 24" fill="currentColor"><path d="M20 8l-8 5-8-5V6l8 5 8-5v2zM12 2L2 7v10l10 5 10-5V7L12 2z"></path></svg>
+            </div>
+            
+            <div class="relative z-10">
+                <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-12 h-12 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                </div>
+                <h3 class="text-xl font-bold text-gray-500 uppercase">Special Delivery!</h3>
+                <div id="modalWinnerName" class="text-3xl font-black text-blue-900 my-4 leading-tight"></div>
+                <p class="text-gray-500 mb-6 italic">สินค้าส่งถึงมือคุณเรียบร้อยแล้ว</p>
+                <button onclick="closeModal()" class="w-full bg-blue-900 text-white py-4 rounded-xl font-bold hover:bg-blue-800 transition-colors shadow-lg">
+                    รับทราบรายการ
+                </button>
+            </div>
         </div>
     </div>
 
@@ -136,6 +174,80 @@
         let remainingNames = [...INITIAL_NAMES];
         let winners = [];
         let isSpinning = false;
+        
+        // Wheel Variables
+        const canvas = document.getElementById('wheelCanvas');
+        const ctx = canvas.getContext('2d');
+        let currentRotation = 0;
+
+        function drawWheel() {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = 380;
+            const sliceCount = remainingNames.length;
+            const sliceAngle = (2 * Math.PI) / sliceCount;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (sliceCount === 0) {
+                // Empty Wheel state
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+                ctx.fillStyle = "#e2e8f0";
+                ctx.fill();
+                ctx.fillStyle = "#64748b";
+                ctx.font = "bold 40px Kanit";
+                ctx.textAlign = "center";
+                ctx.fillText("ไม่มีรายชื่อในระบบ", centerX, centerY);
+                return;
+            }
+
+            remainingNames.forEach((name, i) => {
+                const startAngle = i * sliceAngle + currentRotation;
+                const endAngle = (i + 1) * sliceAngle + currentRotation;
+
+                // Alternate colors - Logistics Palette
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+                
+                // Colors: Blue, Orange, Dark Blue, Light Gray
+                const colors = ['#1e3a8a', '#f97316', '#3b82f6', '#1d4ed8'];
+                ctx.fillStyle = colors[i % colors.length];
+                ctx.fill();
+                ctx.stroke();
+                ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+                ctx.lineWidth = 2;
+
+                // Add Name Text
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate(startAngle + sliceAngle / 2);
+                ctx.textAlign = "right";
+                ctx.fillStyle = "white";
+                ctx.font = sliceCount > 15 ? "16px Kanit" : "bold 22px Kanit";
+                
+                // Truncate name if too long
+                let displayName = name.length > 18 ? name.substring(0, 16) + '..' : name;
+                ctx.fillText(displayName, radius - 40, 10);
+                ctx.restore();
+            });
+
+            // Draw center cap
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 50, 0, 2 * Math.PI);
+            ctx.fillStyle = "white";
+            ctx.fill();
+            ctx.strokeStyle = "#f97316";
+            ctx.lineWidth = 10;
+            ctx.stroke();
+
+            // Center Text
+            ctx.fillStyle = "#1e3a8a";
+            ctx.font = "bold 20px Kanit";
+            ctx.textAlign = "center";
+            ctx.fillText("PICK", centerX, centerY + 8);
+        }
 
         function updateUI() {
             const remainingListDiv = document.getElementById('remainingList');
@@ -144,42 +256,95 @@
             const emptyWinners = document.getElementById('emptyWinners');
             const drawBtn = document.getElementById('drawBtn');
 
-            // Update Remaining List
             remainingListDiv.innerHTML = '';
             remainingNames.forEach((name, index) => {
                 const div = document.createElement('div');
-                div.className = 'flex justify-between items-center p-2 bg-purple-50 rounded-lg text-sm group hover:bg-purple-100 transition-colors';
+                div.className = 'flex justify-between items-center px-3 py-2 bg-gray-50 rounded-lg text-sm border-l-4 border-blue-800 hover:bg-blue-50 transition-colors group';
                 div.innerHTML = `
-                    <span class="text-purple-900">${name}</span>
-                    <button onclick="removeSpecificName(${index})" class="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span class="text-blue-900 font-medium">${name}</span>
+                    <button onclick="removeSpecificName(${index})" class="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                     </button>
                 `;
                 remainingListDiv.appendChild(div);
             });
 
-            // Update Winners List
             winnersListDiv.innerHTML = '';
             winners.forEach((winner, index) => {
                 const div = document.createElement('div');
-                div.className = 'winner-animation flex items-center p-3 bg-green-50 border-l-4 border-green-500 rounded-r-lg shadow-sm';
+                div.className = 'flex items-center p-3 bg-white border border-green-100 rounded-xl shadow-sm animate-celebrate';
                 div.innerHTML = `
-                    <span class="font-bold text-green-700 mr-3">#${winners.length - index}</span>
-                    <span class="text-gray-800">${winner}</span>
+                    <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white font-bold mr-3 shadow-sm">
+                        ${winners.length - index}
+                    </div>
+                    <div>
+                        <div class="text-xs text-green-600 font-bold uppercase">Delivered</div>
+                        <div class="text-gray-800 font-semibold">${winner}</div>
+                    </div>
                 `;
                 winnersListDiv.insertBefore(div, winnersListDiv.firstChild);
             });
 
             countRemaining.innerText = remainingNames.length;
             emptyWinners.classList.toggle('hidden', winners.length > 0);
+            drawBtn.disabled = remainingNames.length === 0 || isSpinning;
             
-            // Disable button if no names left
-            drawBtn.disabled = remainingNames.length === 0;
-            if (remainingNames.length === 0) {
-                drawBtn.innerText = "รายชื่อหมดแล้ว";
-            } else {
-                drawBtn.innerText = "เริ่มสุ่มชื่อ!";
+            drawWheel();
+        }
+
+        function spinWheel() {
+            if (isSpinning || remainingNames.length === 0) return;
+
+            isSpinning = true;
+            const drawBtn = document.getElementById('drawBtn');
+            drawBtn.disabled = true;
+
+            const extraSpins = 5 + Math.random() * 5; // Spin 5-10 times
+            const targetRotation = currentRotation + (extraSpins * 2 * Math.PI) + (Math.random() * 2 * Math.PI);
+            
+            const duration = 4000; // 4 seconds
+            const startTimestamp = performance.now();
+
+            function animate(now) {
+                const elapsed = now - startTimestamp;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                // Easing function (easeOutQuad)
+                const easedProgress = 1 - (1 - progress) * (1 - progress) * (1 - progress);
+                
+                currentRotation = currentRotation + (targetRotation - currentRotation) * 0.05; // Smoothing
+                
+                if (progress < 1) {
+                    drawWheel();
+                    requestAnimationFrame(animate);
+                } else {
+                    currentRotation = targetRotation % (2 * Math.PI);
+                    finalizeWinner();
+                }
             }
+            requestAnimationFrame(animate);
+        }
+
+        function finalizeWinner() {
+            const sliceAngle = (2 * Math.PI) / remainingNames.length;
+            
+            // The pointer is at the top (-90 degrees or -PI/2)
+            // Normalized rotation for calculating index
+            let normalizedRotation = (3 * Math.PI / 2 - currentRotation) % (2 * Math.PI);
+            if (normalizedRotation < 0) normalizedRotation += 2 * Math.PI;
+            
+            const winnerIndex = Math.floor(normalizedRotation / sliceAngle) % remainingNames.length;
+            const winner = remainingNames[winnerIndex];
+
+            remainingNames.splice(winnerIndex, 1);
+            winners.push(winner);
+
+            document.getElementById('modalWinnerName').innerText = winner;
+            setTimeout(() => {
+                document.getElementById('modal').classList.remove('hidden');
+                updateUI();
+                isSpinning = false;
+            }, 300);
         }
 
         function addName() {
@@ -197,79 +362,27 @@
             updateUI();
         }
 
-        function drawLuckyWinner() {
-            if (isSpinning || remainingNames.length === 0) return;
-
-            isSpinning = true;
-            const drawBtn = document.getElementById('drawBtn');
-            const drawingOverlay = document.getElementById('drawingOverlay');
-            const shufflingName = document.getElementById('shufflingName');
-            const winnerText = document.getElementById('winnerText');
-
-            drawBtn.disabled = true;
-            drawingOverlay.classList.remove('hidden');
-            winnerText.innerText = "กำลังประมวลผล...";
-
-            let count = 0;
-            const shuffleInterval = setInterval(() => {
-                const randomName = remainingNames[Math.floor(Math.random() * remainingNames.length)];
-                shufflingName.innerText = randomName;
-                count++;
-                
-                if (count > 20) {
-                    clearInterval(shuffleInterval);
-                    finalizeWinner();
-                }
-            }, 100);
-        }
-
-        function finalizeWinner() {
-            const randomIndex = Math.floor(Math.random() * remainingNames.length);
-            const winner = remainingNames[randomIndex];
-            
-            // Remove from pool and add to winners
-            remainingNames.splice(randomIndex, 1);
-            winners.push(winner);
-
-            // Update UI with result
-            const drawingOverlay = document.getElementById('drawingOverlay');
-            const winnerText = document.getElementById('winnerText');
-            const modal = document.getElementById('modal');
-            const modalWinnerName = document.getElementById('modalWinnerName');
-
-            drawingOverlay.classList.add('hidden');
-            winnerText.innerText = winner;
-            modalWinnerName.innerText = winner;
-            
-            setTimeout(() => {
-                modal.classList.remove('hidden');
-                updateUI();
-                isSpinning = false;
-            }, 500);
-        }
-
         function closeModal() {
             document.getElementById('modal').classList.add('hidden');
-            document.getElementById('drawBtn').disabled = remainingNames.length === 0;
+            updateUI();
         }
 
         function resetGame() {
-            if (confirm('คุณต้องการเริ่มใหม่ทั้งหมดใช่หรือไม่? รายชื่อเดิมจะถูกคืนค่ากลับมา')) {
+            if (confirm('ยืนยันการเริ่มระบบใหม่? รายชื่อพนักงานจะถูกดึงกลับมาทั้งหมด')) {
                 remainingNames = [...INITIAL_NAMES];
                 winners = [];
-                document.getElementById('winnerText').innerText = "กดปุ่มเพื่อเริ่มสุ่ม";
+                currentRotation = 0;
                 updateUI();
             }
         }
 
-        // Initialize UI
-        updateUI();
+        // Init
+        window.onload = () => {
+            updateUI();
+        };
 
-        // Add "Enter" key support for adding names
-        document.getElementById('newNameInput').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') {
-                addName();
-            }
+        document.getElementById('newNameInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addName();
         });
     </script>
 </body>
