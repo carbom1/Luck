@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Carrier Lucky Draw - วงล้อส่งความโชคดี</title>
+    <title>เพื่อนแท้ช่างแอร์แคเรียร์ - วงล้อส่งความโชคดี</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
@@ -77,7 +77,7 @@
                 <div class="carrier-card p-5">
                     <h2 class="text-lg font-bold text-gray-800 mb-3 flex items-center">
                         <svg class="w-5 h-5 mr-2 text-orange-500" fill="currentColor" viewBox="0 0 20 20"><path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z"></path></svg>
-                        เพิ่มชื่อ
+                        เพิ่มรายชื่อ
                     </h2>
                     <div class="flex flex-col gap-2">
                         <input type="text" id="newNameInput" placeholder="พิมพ์ชื่อที่นี่..." 
@@ -90,7 +90,7 @@
 
                 <div class="carrier-card p-5">
                     <div class="flex justify-between items-center mb-3">
-                        <h2 class="font-bold text-gray-800">ในระบบขนส่ง (<span id="countRemaining">0</span>)</h2>
+                        <h2 class="font-bold text-gray-800">รายชื่อในระบบ (<span id="countRemaining">0</span>)</h2>
                     </div>
                     <div id="remainingList" class="names-list h-64 overflow-y-auto space-y-1">
                         <!-- Names list -->
@@ -124,13 +124,13 @@
                 <div class="carrier-card p-5 h-full flex flex-col">
                     <h2 class="text-lg font-bold text-green-600 mb-4 flex items-center">
                         <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        ผู้โชคดี (รับสินค้าแล้ว)
+                        ผู้โชคดีที่ได้รับรางวัล
                     </h2>
                     <div id="winnersList" class="names-list flex-1 overflow-y-auto space-y-3">
                         <!-- Winners -->
                     </div>
                     <div id="emptyWinners" class="text-center py-10 text-gray-400">
-                        ยังไม่มีการส่งมอบ
+                        ยังไม่มีผู้โชคดี
                     </div>
                 </div>
             </div>
@@ -151,7 +151,7 @@
                 </div>
                 <h3 class="text-xl font-bold text-gray-500 uppercase">Special Delivery!</h3>
                 <div id="modalWinnerName" class="text-3xl font-black text-blue-900 my-4 leading-tight"></div>
-                <p class="text-gray-500 mb-6 italic">สินค้าส่งถึงมือคุณเรียบร้อยแล้ว</p>
+                <p class="text-gray-500 mb-6 italic">ยินดีด้วย! คุณคือผู้โชคดี</p>
                 <button onclick="closeModal()" class="w-full bg-blue-900 text-white py-4 rounded-xl font-bold hover:bg-blue-800 transition-colors shadow-lg">
                     รับทราบรายการ
                 </button>
@@ -207,12 +207,10 @@
                 const endAngle = (i + 1) * sliceAngle + currentRotation;
 
                 // Alternate colors - Logistics Palette
+                const colors = ['#1e3a8a', '#f97316', '#3b82f6', '#1d4ed8'];
                 ctx.beginPath();
                 ctx.moveTo(centerX, centerY);
                 ctx.arc(centerX, centerY, radius, startAngle, endAngle);
-                
-                // Colors: Blue, Orange, Dark Blue, Light Gray
-                const colors = ['#1e3a8a', '#f97316', '#3b82f6', '#1d4ed8'];
                 ctx.fillStyle = colors[i % colors.length];
                 ctx.fill();
                 ctx.stroke();
@@ -272,7 +270,7 @@
             winnersListDiv.innerHTML = '';
             winners.forEach((winner, index) => {
                 const div = document.createElement('div');
-                div.className = 'flex items-center p-3 bg-white border border-green-100 rounded-xl shadow-sm animate-celebrate';
+                div.className = 'flex items-center p-3 bg-white border border-green-100 rounded-xl shadow-sm';
                 div.innerHTML = `
                     <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white font-bold mr-3 shadow-sm">
                         ${winners.length - index}
@@ -299,20 +297,19 @@
             const drawBtn = document.getElementById('drawBtn');
             drawBtn.disabled = true;
 
-            const extraSpins = 5 + Math.random() * 5; // Spin 5-10 times
+            const extraSpins = 5 + Math.random() * 5; 
             const targetRotation = currentRotation + (extraSpins * 2 * Math.PI) + (Math.random() * 2 * Math.PI);
             
-            const duration = 4000; // 4 seconds
+            const duration = 4000; 
             const startTimestamp = performance.now();
 
             function animate(now) {
                 const elapsed = now - startTimestamp;
                 const progress = Math.min(elapsed / duration, 1);
                 
-                // Easing function (easeOutQuad)
                 const easedProgress = 1 - (1 - progress) * (1 - progress) * (1 - progress);
                 
-                currentRotation = currentRotation + (targetRotation - currentRotation) * 0.05; // Smoothing
+                currentRotation = currentRotation + (targetRotation - currentRotation) * 0.05; 
                 
                 if (progress < 1) {
                     drawWheel();
@@ -327,9 +324,6 @@
 
         function finalizeWinner() {
             const sliceAngle = (2 * Math.PI) / remainingNames.length;
-            
-            // The pointer is at the top (-90 degrees or -PI/2)
-            // Normalized rotation for calculating index
             let normalizedRotation = (3 * Math.PI / 2 - currentRotation) % (2 * Math.PI);
             if (normalizedRotation < 0) normalizedRotation += 2 * Math.PI;
             
@@ -376,7 +370,6 @@
             }
         }
 
-        // Init
         window.onload = () => {
             updateUI();
         };
@@ -387,4 +380,3 @@
     </script>
 </body>
 </html>
-
